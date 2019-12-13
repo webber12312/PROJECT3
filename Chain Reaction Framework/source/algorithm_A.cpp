@@ -24,7 +24,7 @@ using namespace std;
  * 3. The function that return the color fo the cell(row, col)
  * 4. The function that print out the current board statement
 *************************************************************************/
-//
+
 
 void algorithm_A(Board board, Player player, int index[]){
 
