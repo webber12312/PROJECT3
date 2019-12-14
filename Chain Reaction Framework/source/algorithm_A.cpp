@@ -35,86 +35,152 @@ int usual[12][2]= {{1,1},{1,2},{1,3},{1,4},
     {2,1},{2,2},{2,3},{2,4},
     {3,1},{3,2},{3,3},{3,4},
 };
+int one_step_to_explode[30][2];
+int two_step_to_explode[30][2];
+int three_step_to_explode[30][2];
 
-void expand(Board board,int*row,int*col)
+int least_sur_enemy_to_explode(Board board,char color,int i,int j)
+{
+    int least_ene_to_exlpode=10;
+    int ene_ready_explode;
+    if(i-1>=0)
+    {
+        if(board.get_cell_color(i-1,j)!=color&&board.get_cell_color(i-1,j)!='w')//if enemy in up row
+        {
+            ene_ready_explode=board.get_capacity(i-1,j)-board.get_orbs_num(i-1,j);
+            if(ene_ready_explode<least_ene_to_exlpode)
+                least_ene_to_exlpode=ene_ready_explode;
+        }
+    }
+    if(i+1<5)
+    {
+        if(board.get_cell_color(i+1,j)!=color&&board.get_cell_color(i+1,j)!='w')
+        {
+            ene_ready_explode=board.get_capacity(i+1,j)-board.get_orbs_num(i+1,j);
+            if(ene_ready_explode<least_ene_to_exlpode)
+                least_ene_to_exlpode=ene_ready_explode;
+        }
+    }
+    if(j-1>=0)
+    {
+        if(board.get_cell_color(i,j-1)!=color&&board.get_cell_color(i,j-1)!='w')
+        {
+            ene_ready_explode=board.get_capacity(i,j-1)-board.get_orbs_num(i,j-1);
+            if(ene_ready_explode<least_ene_to_exlpode)
+                least_ene_to_exlpode=ene_ready_explode;
+        }
+    }
+    if(j+1<6)
+    {
+        if(board.get_cell_color(i,j+1)!=color&&board.get_cell_color(i,j+1)!='w')
+        {
+            ene_ready_explode=board.get_capacity(i,j+1)-board.get_orbs_num(i,j+1);
+            if(ene_ready_explode<least_ene_to_exlpode)
+                least_ene_to_exlpode=ene_ready_explode;
+        }
+    }
+    return least_ene_to_exlpode;
+}
+
+void expand(Board board,char color,int*row,int*col)
 {
     for(int i=0; i<4; i++)
     {
         if(board.get_cell_color(corner[i][0],corner[i][1])=='w')
         {
-            *row=corner[i][0];
-            *col=corner[i][1];
-            return;
+            int my_ready_explode=board.get_capacity(corner[i][0],corner[i][1])-board.get_orbs_num(corner[i][0],corner[i][1]);
+            if(my_ready_explode<=least_sur_enemy_to_explode(board,color,corner[i][0],corner[i][1]))
+            {
+                *row=corner[i][0];
+                *col=corner[i][1];
+                return;
+            }
         }
     }
     for(int i=0; i<14; i++)
     {
         if(board.get_cell_color(edge[i][0],edge[i][1])=='w')
         {
-            *row=edge[i][0];
-            *col=edge[i][1];
-            return;
+            int my_ready_explode=board.get_capacity(edge[i][0],edge[i][1])-board.get_orbs_num(edge[i][0],edge[i][1]);
+            if(my_ready_explode<=least_sur_enemy_to_explode(board,color,edge[i][0],edge[i][1]))
+            {
+                *row=edge[i][0];
+                *col=edge[i][1];
+                return;
+            }
         }
     }
     for(int i=0; i<12; i++)
     {
         if(board.get_cell_color(usual[i][0],usual[i][1])=='w')
         {
-            *row=usual[i][0];
-            *col=usual[i][1];
-            return;
+            int my_ready_explode=board.get_capacity(usual[i][0],usual[i][1])-board.get_orbs_num(usual[i][0],usual[i][1]);
+            if(my_ready_explode<=least_sur_enemy_to_explode(board,color,usual[i][0],usual[i][1]))
+            {
+                *row=usual[i][0];
+                *col=usual[i][1];
+                return;
+            }
         }
     }
 }
 
-void add_orb_up(Board board,char color,int*row,int*col)
+void add_orb_up(Board board,char color,int*row,int*col,int record1,int record2,int record3)
 {
+    for(int r=0; r<record1; r++)
+    {
+        int i=one_step_to_explode[r][0];
+        int j=one_step_to_explode[r][1];
+        int my_ready_explode=board.get_capacity(i,j)-board.get_orbs_num(i,j);
+        if(my_ready_explode==least_sur_enemy_to_explode(board,color,i,j))
+        {
+            *row=i;
+            *col=j;
+            return;
+        }
+    }
+    for(int r=0; r<record2; r++)
+    {
+        int i=two_step_to_explode[r][0];
+        int j=two_step_to_explode[r][1];
+        int my_ready_explode=board.get_capacity(i,j)-board.get_orbs_num(i,j);
+        if(my_ready_explode==least_sur_enemy_to_explode(board,color,i,j))
+        {
+            *row=i;
+            *col=j;
+            return;
+        }
+
+    }
+    for(int r=0; r<record3; r++)
+    {
+        int i=three_step_to_explode[r][0];
+        int j=three_step_to_explode[r][1];
+        int my_ready_explode=board.get_capacity(i,j)-board.get_orbs_num(i,j);
+        if(my_ready_explode==least_sur_enemy_to_explode(board,color,i,j))
+        {
+            *row=i;
+            *col=j;
+            return;
+        }
+
+    }
+}
+
+
+void random(Board board,char color,int*row,int*col)
+{
+    /*****************************/
+    //srand(time(NULL)*time(NULL));//之後要補上
+    /*****************************/
     for(int i=0; i<5; i++)
     {
         for(int j=0; j<6; j++)
         {
             if(board.get_cell_color(i,j)==color)
             {
-                int least_ene_to_exlpode=10;
-                int ene_ready_explode;
-                if(i-1>=0)
-                {
-                    if(board.get_cell_color(i-1,j)!=color&&board.get_cell_color(i-1,j)!='w')//if enemy in up row
-                    {
-                        ene_ready_explode=board.get_capacity(i-1,j)-board.get_orbs_num(i-1,j);
-                        if(ene_ready_explode<least_ene_to_exlpode)
-                            least_ene_to_exlpode=ene_ready_explode;
-                    }
-                }
-                if(i+1<5)
-                {
-                    if(board.get_cell_color(i+1,j)!=color&&board.get_cell_color(i+1,j)!='w')
-                    {
-                        ene_ready_explode=board.get_capacity(i+1,j)-board.get_orbs_num(i+1,j);
-                        if(ene_ready_explode<least_ene_to_exlpode)
-                            least_ene_to_exlpode=ene_ready_explode;
-                    }
-                }
-                if(j-1>=0)
-                {
-                    if(board.get_cell_color(i,j-1)!=color&&board.get_cell_color(i,j-1)!='w')
-                    {
-                        ene_ready_explode=board.get_capacity(i,j-1)-board.get_orbs_num(i,j-1);
-                        if(ene_ready_explode<least_ene_to_exlpode)
-                            least_ene_to_exlpode=ene_ready_explode;
-                    }
-                }
-                if(j+1<6)
-                {
-                    if(board.get_cell_color(i,j+1)!=color&&board.get_cell_color(i,j+1)!='w')
-                    {
-                        ene_ready_explode=board.get_capacity(i,j+1)-board.get_orbs_num(i,j+1);
-                        if(ene_ready_explode<least_ene_to_exlpode)
-                            least_ene_to_exlpode=ene_ready_explode;
-                    }
-                }
                 int my_ready_explode=board.get_capacity(i,j)-board.get_orbs_num(i,j);
-                if(my_ready_explode==least_ene_to_exlpode)
+                if(my_ready_explode<least_sur_enemy_to_explode(board,color,i,j))
                 {
                     *row=i;
                     *col=j;
@@ -123,15 +189,43 @@ void add_orb_up(Board board,char color,int*row,int*col)
             }
         }
     }
-}
-
-void random(Board board,char color,int*row,int*col)
-{
-    srand(time(NULL)*time(NULL));
-    while(1){
+    while(1)
+    {
         *row = rand() % 5;
         *col = rand() % 6;
-        if(board.get_cell_color(*row, *col) == color || board.get_cell_color(*row, *col) == 'w') break;
+        if(board.get_cell_color(*row, *col) == color || board.get_cell_color(*row, *col) == 'w')
+            break;
+    }
+}
+
+void record_step_to_explode(Board board,char color,int*record_1,int*record_2,int*record_3)
+{
+    for(int i=0; i<5; i++)
+    {
+        for(int j=0; j<6; j++)
+        {
+            if(board.get_cell_color(i,j)==color)
+            {
+                if(board.get_capacity(i,j)-board.get_orbs_num(i,j)==1)
+                {
+                    one_step_to_explode[*record_1][0]=i;
+                    one_step_to_explode[*record_1][1]=j;
+                    (*record_1)++;
+                }
+                else if(board.get_capacity(i,j)-board.get_orbs_num(i,j)==2)
+                {
+                    two_step_to_explode[*record_2][0]=i;
+                    two_step_to_explode[*record_2][1]=j;
+                    (*record_2)++;
+                }
+                else if(board.get_capacity(i,j)-board.get_orbs_num(i,j)==3)
+                {
+                    three_step_to_explode[*record_3][0]=i;
+                    three_step_to_explode[*record_3][1]=j;
+                    (*record_3)++;
+                }
+            }
+        }
     }
 }
 
@@ -145,13 +239,14 @@ void algorithm_A(Board board, Player player, int index[])
 
     //////////// Random Algorithm ////////////
     // Here is the random algorithm for your reference, you can delete or comment it.
-
+    int record_1=0,record_2=0,record_3=0;
     int row=-1, col=-1;
     char color = player.get_color();
-    add_orb_up(board,color,&row,&col);
+    record_step_to_explode(board,color,&record_1,&record_2,&record_3);
+    add_orb_up(board,color,&row,&col,record_1,record_2,record_3);
     if(row==-1&&col==-1)
     {
-        expand(board,&row,&col);
+        expand(board,color,&row,&col);
     }
     if(row==-1&&col==-1)
     {
