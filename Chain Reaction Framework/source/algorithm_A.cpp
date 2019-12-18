@@ -38,6 +38,8 @@ int usual[12][2]= {{1,1},{1,2},{1,3},{1,4},
 int one_step_to_explode[30][2];
 int two_step_to_explode[30][2];
 int three_step_to_explode[30][2];
+int continue_critial=0;
+int DFS_search[5][6];
 
 int least_sur_enemy_to_explode(Board board,char color,int i,int j)
 {
@@ -138,6 +140,7 @@ void add_orb_up(Board board,char color,int*row,int*col,int record1,int record2,i
             *col=j;
             return;
         }
+
     }
     for(int r=0; r<record2; r++)
     {
@@ -171,7 +174,7 @@ void add_orb_up(Board board,char color,int*row,int*col,int record1,int record2,i
 void random(Board board,char color,int*row,int*col)
 {
     /*****************************/
-    //srand(time(NULL)*time(NULL));//之後要補上
+    //srand(time(NULL)*time(NULL));
     /*****************************/
     for(int i=0; i<5; i++)
     {
@@ -186,6 +189,7 @@ void random(Board board,char color,int*row,int*col)
                     *col=j;
                     return;
                 }
+
             }
         }
     }
@@ -229,6 +233,160 @@ void record_step_to_explode(Board board,char color,int*record_1,int*record_2,int
     }
 }
 
+void DFS(Board tmp_board,char color,int i,int j)
+{
+    continue_critial++;
+    DFS_search[i][j]=1;
+    if(i-1>=0)
+    {
+        if(tmp_board.get_cell_color(i-1,j)==color)
+        {
+            if(tmp_board.get_capacity(i-1,j)-tmp_board.get_orbs_num(i-1,j)==1&&DFS_search[i-1][j]==0)
+            {
+                DFS(tmp_board,color,i-1,j);
+            }
+        }
+    }
+    if(i+1<5)
+    {
+        if(tmp_board.get_cell_color(i+1,j)==color)
+        {
+            if(tmp_board.get_capacity(i+1,j)-tmp_board.get_orbs_num(i+1,j)==1&&DFS_search[i+1][j]==0)
+            {
+                DFS(tmp_board,color,i+1,j);
+            }
+        }
+    }
+    if(j-1>=0)
+    {
+        if(tmp_board.get_cell_color(i,j-1)==color)
+        {
+            if(tmp_board.get_capacity(i,j-1)-tmp_board.get_orbs_num(i,j-1)==1&&DFS_search[i][j-1]==0)
+            {
+                DFS(tmp_board,color,i,j-1);
+            }
+        }
+    }
+    if(j+1<6)
+    {
+        if(tmp_board.get_cell_color(i,j+1)==color)
+        {
+            if(tmp_board.get_capacity(i,j+1)-tmp_board.get_orbs_num(i,j+1)==1&&DFS_search[i][j+1]==0)
+            {
+                DFS(tmp_board,color,i,j+1);
+            }
+        }
+    }
+}
+
+int find_critiacal(Board tmp_board,char color)
+{
+    int add=0;
+    for(int i=0;i<5;i++)
+    {
+        for(int j=0;j<6;j++)
+        {
+            DFS_search[i][j]=0;
+        }
+    }
+    for(int i=0; i<5; i++)
+    {
+        for(int j=0; j<6; j++)
+        {
+            if(tmp_board.get_capacity(i,j)-tmp_board.get_orbs_num(i,j)==1&&DFS_search[i][j]==0&&tmp_board.get_cell_color(i,j)==color)
+            {
+                continue_critial=0;
+                DFS(tmp_board,color,i,j);
+                if(continue_critial>1)add+=continue_critial;
+            }
+        }
+    }
+    return add;
+}
+
+
+
+int score(Board tmp_board,char color)
+{
+    int sc=0;
+    int my_orb=0,enemy_orb=0;
+    for(int i=0; i<5; i++)
+    {
+        for(int j=0; j<6; j++)
+        {
+            if(tmp_board.get_cell_color(i,j)==color)
+            {
+                my_orb+=tmp_board.get_orbs_num(i,j);
+                int flag=1;
+                if(i-1>=0)
+                {
+                    if(tmp_board.get_cell_color(i-1,j)!='w'&&tmp_board.get_cell_color(i-1,j)!=color)
+                    {
+                        if(tmp_board.get_orbs_num(i-1,j)==tmp_board.get_capacity(i-1,j)-1)
+                        {
+                            sc=sc-((5-(tmp_board.get_capacity(i-1,j)))*tmp_board.get_orbs_num(i,j));
+                            flag=0;
+                        }
+                    }
+                }
+                if(i+1<5)
+                {
+                    if(tmp_board.get_cell_color(i+1,j)!='w'&&tmp_board.get_cell_color(i+1,j)!=color)
+                    {
+                        if(tmp_board.get_orbs_num(i+1,j)==tmp_board.get_capacity(i+1,j)-1)
+                        {
+                            sc=sc-((5-(tmp_board.get_capacity(i+1,j)))*tmp_board.get_orbs_num(i,j));
+                            flag=0;
+                        }
+                    }
+                }
+                if(j-1>=0)
+                {
+                    if(tmp_board.get_cell_color(i,j-1)!='w'&&tmp_board.get_cell_color(i,j-1)!=color)
+                    {
+                        if(tmp_board.get_orbs_num(i,j-1)==tmp_board.get_capacity(i,j-1)-1)
+                        {
+                            sc=sc-((5-(tmp_board.get_capacity(i,j-1)))*tmp_board.get_orbs_num(i,j));
+                            flag=0;
+                        }
+                    }
+                }
+                if(j+1<6)
+                {
+                    if(tmp_board.get_cell_color(i,j+1)!='w'&&tmp_board.get_cell_color(i,j+1)!=color)
+                    {
+                        if(tmp_board.get_orbs_num(i,j+1)==tmp_board.get_capacity(i,j+1)-1)
+                        {
+                            sc=sc-((5-(tmp_board.get_capacity(i,j+1)))*tmp_board.get_orbs_num(i,j));
+                            flag=0;
+                        }
+                    }
+                }
+
+                if(flag)
+                {
+                    if(tmp_board.get_capacity(i,j)==3)
+                        sc+=2;
+                    else if(tmp_board.get_capacity(i,j)==2)
+                        sc+=3;
+                    if(tmp_board.get_orbs_num(i,j)==tmp_board.get_capacity(i,j)-1)
+                        sc+=2;
+                }
+
+            }
+            if(tmp_board.get_cell_color(i,j)!='w'&&tmp_board.get_cell_color(i,j)!=color)
+            {
+                enemy_orb+=tmp_board.get_orbs_num(i,j);
+            }
+        }
+    }
+    sc+=my_orb;
+    if(enemy_orb==0&&my_orb>1)return 10000;
+    if(my_orb==0&&enemy_orb>1)return -10000;
+    //sc+=1*find_critiacal(tmp_board,color);
+    return sc;
+}
+
 void algorithm_A(Board board, Player player, int index[])
 {
 
@@ -239,20 +397,29 @@ void algorithm_A(Board board, Player player, int index[])
 
     //////////// Random Algorithm ////////////
     // Here is the random algorithm for your reference, you can delete or comment it.
-    int record_1=0,record_2=0,record_3=0;
-    int row=-1, col=-1;
+    int row, col;
     char color = player.get_color();
-    record_step_to_explode(board,color,&record_1,&record_2,&record_3);
-    add_orb_up(board,color,&row,&col,record_1,record_2,record_3);
-    if(row==-1&&col==-1)
+    Board tmp_board;
+    int largest_score=-10000;
+    int cur_score;
+    for(int i=0; i<5; i++)
     {
-        expand(board,color,&row,&col);
+        for(int j=0; j<6; j++)
+        {
+            tmp_board=board;
+            if(tmp_board.get_cell_color(i,j)==color||tmp_board.get_cell_color(i,j)=='w')
+            {
+                tmp_board.place_orb(i,j,&player);
+                cur_score=score(tmp_board,color);
+                if(cur_score>largest_score)
+                {
+                    largest_score=cur_score;
+                    row=i;
+                    col=j;
+                }
+            }
+        }
     }
-    if(row==-1&&col==-1)
-    {
-        random(board,color,&row,&col);
-    }
-
     index[0] = row;
     index[1] = col;
 }
